@@ -27,10 +27,18 @@ defmodule PentoWeb.UserLive.Registration do
             field={@form[:email]}
             type="email"
             label="Email"
-            autocomplete="username"
+            autocomplete="email"
             spellcheck="false"
             required
             phx-mounted={JS.focus()}
+          />
+          <.input
+            field={@form[:username]}
+            type="text"
+            label="Username"
+            autocomplete="username"
+            spellcheck="false"
+            required
           />
 
           <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">

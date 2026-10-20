@@ -4,6 +4,7 @@ defmodule Pento.Accounts.User do
 
   schema "users" do
     field :email, :string
+    field :username, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
@@ -51,6 +52,51 @@ defmodule Pento.Accounts.User do
   defp validate_email_changed(changeset) do
     if get_field(changeset, :email) && get_change(changeset, :email) == nil do
       add_error(changeset, :email, "did not change")
+    else
+      changeset
+    end
+  end
+
+  def username_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:username])
+    |> validate_username(opts)
+  end
+
+  @doc """
+  A user changeset for registering or changing the username.
+
+  It requires the username to change otherwise an error is added.
+
+  ## Options
+
+    * `:validate_unique` - Set to false if you don't want to validate the
+      uniqueness of the username, useful when displaying live validations.
+      Defaults to `true`.
+  """
+  def validate_username(changeset, opts) do
+    changeset =
+      changeset
+      |> validate_required([:username])
+      |> validate_format(:username, ~r/^[\w\.\-]+$/,
+        message:
+          "must be 5-20 chars long, containing only alphanumerics, period (.), dash (-) and underscore (_)"
+      )
+      |> validate_length(:username, min: 5, max: 20)
+
+    if Keyword.get(opts, :validate_unique, true) do
+      changeset
+      |> unsafe_validate_unique(:username, Pento.Repo)
+      |> unique_constraint(:username)
+      |> validate_username_changed()
+    else
+      changeset
+    end
+  end
+
+  defp validate_username_changed(changeset) do
+    if get_field(changeset, :username) && get_change(changeset, :username) == nil do
+      add_error(changeset, :username, "did not change")
     else
       changeset
     end

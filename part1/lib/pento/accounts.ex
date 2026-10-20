@@ -23,7 +23,13 @@ defmodule Pento.Accounts do
 
   """
   def get_user_by_email(email) when is_binary(email) do
-    Repo.get_by(User, email: email)
+    user = Repo.get_by(User, email: email)
+
+    if user do
+      user
+    else
+      Repo.get_by(User, username: email)
+    end
   end
 
   @doc """
@@ -40,8 +46,17 @@ defmodule Pento.Accounts do
   """
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
-    user = Repo.get_by(User, email: email)
-    if User.valid_password?(user, password), do: user
+    user_by_email = Repo.get_by(User, email: email)
+
+    if user_by_email != nil do
+      if User.valid_password?(user_by_email, password), do: user_by_email
+    end
+
+    user_by_username = Repo.get_by(User, username: email)
+
+    if user_by_username != nil do
+      if User.valid_password?(user_by_username, password), do: user_by_username
+    end
   end
 
   @doc """
@@ -77,6 +92,7 @@ defmodule Pento.Accounts do
   def register_user(attrs) do
     %User{}
     |> User.email_changeset(attrs)
+    |> User.username_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -130,6 +146,21 @@ defmodule Pento.Accounts do
         _ -> {:error, :transaction_aborted}
       end
     end)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user's username.
+
+  See `Pento.Accounts.User.username_changeset/3` for a list of supported options.
+
+  ## Examples
+
+      iex> change_user_username(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_username(user, attrs \\ %{}, opts \\ []) do
+    User.username_changeset(user, attrs, opts)
   end
 
   @doc """

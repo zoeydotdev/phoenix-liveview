@@ -86,12 +86,14 @@ defmodule PentoWeb.UserLive.Settings do
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user
     email_changeset = Accounts.change_user_email(user, %{}, validate_unique: false)
+    username_changeset = Accounts.change_user_username(user, %{}, validate_unique: false)
     password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
 
     socket =
       socket
       |> assign(:current_email, user.email)
       |> assign(:email_form, to_form(email_changeset))
+      |> assign(:username_form, to_form(username_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
 
@@ -109,6 +111,19 @@ defmodule PentoWeb.UserLive.Settings do
       |> to_form()
 
     {:noreply, assign(socket, email_form: email_form)}
+  end
+
+  @impl true
+  def handle_event("validate_username", params, socket) do
+    %{"user" => user_params} = params
+
+    username_form =
+      socket.assigns.current_scope.user
+      |> Accounts.change_user_username(user_params, validate_unique: false)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, username_form: username_form)}
   end
 
   def handle_event("update_email", params, socket) do

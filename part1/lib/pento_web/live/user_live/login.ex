@@ -45,8 +45,8 @@ defmodule PentoWeb.UserLive.Login do
           <.input
             readonly={!!@current_scope}
             field={f[:email]}
-            type="email"
-            label="Email"
+            type="text"
+            label="Email/Username"
             autocomplete="username"
             spellcheck="false"
             required
@@ -70,8 +70,8 @@ defmodule PentoWeb.UserLive.Login do
           <.input
             readonly={!!@current_scope}
             field={f[:email]}
-            type="email"
-            label="Email"
+            type="text"
+            label="Email/Username"
             autocomplete="username"
             spellcheck="false"
             required
