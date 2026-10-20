@@ -43,6 +43,7 @@ defmodule PentoWeb.WrongLive do
       </h2>
       <br />
       <h2>It's {@current_time}</h2>
+      <h2>{@current_user.email}</h2>
     </main>
     """
   end
@@ -96,6 +97,7 @@ defmodule PentoWeb.WrongLive do
       message: "Make a guess:",
       magic_number: magic_number(),
       correct: false,
+      current_user: socket.assigns.current_scope.user,
       current_time: time()
     )
   end
