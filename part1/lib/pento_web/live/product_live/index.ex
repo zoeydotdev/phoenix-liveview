@@ -7,6 +7,7 @@ defmodule PentoWeb.ProductLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <h1 class="text-2xl font-bold">{@greeting}</h1>
       <.header>
         Listing Products
         <:actions>
@@ -29,7 +30,7 @@ defmodule PentoWeb.ProductLive.Index do
           <div class="sr-only">
             <.link navigate={~p"/products/#{product}"}>Show</.link>
           </div>
-          <.link navigate={~p"/products/#{product}/edit"}>Edit</.link>
+          <.link patch={~p"/products/#{product}/edit"}>Edit</.link>
         </:action>
         <:action :let={{id, product}}>
           <.link
@@ -53,6 +54,7 @@ defmodule PentoWeb.ProductLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Listing Products")
+     |> assign(:greeting, "Welcome to Pento!")
      |> stream(:products, list_products(socket.assigns.current_scope))}
   end
 
