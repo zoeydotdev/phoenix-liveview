@@ -31,7 +31,7 @@ defmodule PentoWeb.PromoLive do
           phx-submit="save"
         >
           <.input field={@form[:first_name]} type="text" label="First Name" />
-          <.input field={@form[:email]} type="email" label="Email" />
+          <.input field={@form[:email]} type="email" label="Email" phx-debounce="blur" />
           <footer>
             <.button phx-disable-with="Sending..." variant="primary">Send Promo</.button>
           </footer>
