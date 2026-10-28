@@ -99,10 +99,19 @@ defmodule Pento.Catalog do
   def update_product(%Scope{} = scope, %Product{} = product, attrs) do
     true = product.user_id == scope.user.id
 
+    new_image = Map.get(attrs, "image_upload")
+    image = product.image_upload
+
     with {:ok, product = %Product{}} <-
            product
            |> Product.changeset(attrs, scope)
            |> Repo.update() do
+      if new_image != image do
+        name = Path.basename(image)
+        old_path = Path.join("priv/static/images/uploads", name)
+        File.rm!(old_path)
+      end
+
       broadcast_product(scope, {:updated, product})
       {:ok, product}
     end

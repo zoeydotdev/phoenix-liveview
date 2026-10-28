@@ -18,11 +18,43 @@ defmodule PentoWeb.ProductLive.Form do
         <.input field={@form[:description]} type="text" label="Description" />
         <.input field={@form[:unit_price]} type="number" label="Unit price" step="any" />
         <.input field={@form[:sku]} type="number" label="Sku" />
+        <div class="flex">
+          <div
+            :if={@product.image_upload && @uploads.image.entries == []}
+            class="my-6 mx-3"
+          >
+            <img alt="product image" width="200" src={@product.image_upload} />
+          </div>
+          <div
+            phx-drop-target={@uploads.image.ref}
+            class="border-2 border-dashed border-gray-300 rounded-lg px-3 py-6 m-6"
+          >
+            <label for={@uploads.image.ref} class="block text-sm font-medium">
+              Update Product Image
+            </label>
+            <.live_file_input upload={@uploads.image} />
+          </div>
+        </div>
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Product</.button>
           <.button navigate={return_path(@current_scope, @return_to, @product)}>Cancel</.button>
         </footer>
       </.form>
+      <div :for={entry <- @uploads.image.entries}>
+        <div
+          :if={not has_image_upload_errors?(@uploads.image, entry)}
+          class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 my-3 rounded"
+        >
+          <.live_img_preview entry={entry} />
+          {entry.client_name} - {entry.progress}%
+        </div>
+        <div
+          :for={err <- upload_errors(@uploads.image, entry)}
+          class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+        >
+          {upload_error_to_string(err)}
+        </div>
+      </div>
     </Layouts.app>
     """
   end
@@ -32,11 +64,14 @@ defmodule PentoWeb.ProductLive.Form do
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
-     |> apply_action(socket.assigns.live_action, params)}
+     |> apply_action(socket.assigns.live_action, params)
+     |> allow_upload(:image,
+       accept: ~w(.jpg .jpeg .png),
+       max_entries: 1,
+       max_file_size: 9_000_000,
+       auto_upload: true
+     )}
   end
-
-  defp return_to("show"), do: "show"
-  defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     product = Catalog.get_product!(socket.assigns.current_scope, id)
@@ -65,21 +100,36 @@ defmodule PentoWeb.ProductLive.Form do
   end
 
   def handle_event("save", %{"product" => product_params}, socket) do
+    product_params = params_with_image(socket, product_params)
     save_product(socket, socket.assigns.live_action, product_params)
   end
 
-  defp save_product(socket, :edit, product_params) do
+  def params_with_image(socket, params) do
+    path =
+      socket
+      |> consume_uploaded_entries(:image, &upload_static_file/2)
+      |> hd()
+
+    Map.put(params, "image_upload", path)
+  end
+
+  defp save_product(socket, :edit, params) do
     case Catalog.update_product(
            socket.assigns.current_scope,
            socket.assigns.product,
-           product_params
+           params
          ) do
       {:ok, product} ->
         {:noreply,
          socket
          |> put_flash(:info, "Product updated successfully")
          |> push_navigate(
-           to: return_path(socket.assigns.current_scope, socket.assigns.return_to, product)
+           to:
+             return_path(
+               socket.assigns.current_scope,
+               socket.assigns.return_to,
+               product
+             )
          )}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -87,8 +137,10 @@ defmodule PentoWeb.ProductLive.Form do
     end
   end
 
-  defp save_product(socket, :new, product_params) do
-    case Catalog.create_product(socket.assigns.current_scope, product_params) do
+  defp save_product(socket, :new, params) do
+    params = params_with_image(socket, params)
+
+    case Catalog.create_product(socket.assigns.current_scope, params) do
       {:ok, product} ->
         {:noreply,
          socket
@@ -102,6 +154,40 @@ defmodule PentoWeb.ProductLive.Form do
     end
   end
 
+  defp return_to("show"), do: "show"
+  defp return_to(_), do: "index"
+
   defp return_path(_scope, "index", _product), do: ~p"/products"
   defp return_path(_scope, "show", product), do: ~p"/products/#{product}"
+
+  defp has_image_upload_errors?(conf, entry) do
+    case upload_errors(conf, entry) do
+      [_ | _] -> true
+      [] -> false
+      _ -> false
+    end
+  end
+
+  defp upload_error_to_string(:not_accepted), do: "Invalid file type"
+  defp upload_error_to_string(:too_large), do: "File exceeds 9MB"
+  defp upload_error_to_string(:external_client_failure), do: "Something went terribly wrong"
+
+  defp upload_static_file(%{path: path}, entry) do
+    # Plug in your production image file persistence implementation here!
+    ext = file_extension(entry)
+    filename = Path.basename(path) <> ext
+    dest = Path.join("priv/static/images/uploads", filename)
+    File.cp!(path, dest)
+
+    {:ok, ~p"/images/uploads/#{filename}"}
+  end
+
+  defp file_extension(%{client_type: type}) do
+    case type do
+      "image/png" -> ".png"
+      "image/jpeg" -> ".jpeg"
+      "image/jpg" -> ".jpg"
+      _ -> ""
+    end
+  end
 end

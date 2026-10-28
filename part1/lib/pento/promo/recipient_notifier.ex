@@ -3,7 +3,6 @@ defmodule Pento.Promo.RecipientNotifier do
 
   alias Ecto.UUID
   alias Pento.Mailer
-  alias Pento.Promo.Recipient
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
