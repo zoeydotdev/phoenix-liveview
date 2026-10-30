@@ -6,8 +6,21 @@ defmodule Pento.Survey do
   import Ecto.Query, warn: false
   alias Pento.Repo
 
-  alias Pento.Survey.Demographic
   alias Pento.Accounts.Scope
+  alias Pento.Survey.Demographic
+  alias Pento.Survey.Rating
+
+  @doc """
+  Gets a demographic for the given user scope.
+
+  Returns nil if no demographic exists for the user.
+  """
+  def get_demographic_by_user(%Scope{} = scope) do
+    Repo.one(
+      from demographic in Demographic,
+        where: demographic.user_id == ^scope.user.id
+    )
+  end
 
   @doc """
   Subscribes to scoped notifications about any demographic changes.

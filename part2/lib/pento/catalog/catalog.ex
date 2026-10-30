@@ -6,8 +6,15 @@ defmodule Pento.Catalog do
   import Ecto.Query, warn: false
   alias Pento.Repo
 
-  alias Pento.Catalog.Product
   alias Pento.Accounts.Scope
+  alias Pento.Catalog.Product
+  alias Pento.Catalog.Product.Query, as: ProductQuery
+
+  def list_products_with_user_rating(user) do
+    ProductQuery.base()
+    |> ProductQuery.with_user_ratings(user)
+    |> Repo.all()
+  end
 
   @doc """
   Subscribes to scoped notifications about any product changes.
