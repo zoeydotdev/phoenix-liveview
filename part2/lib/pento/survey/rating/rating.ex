@@ -5,6 +5,8 @@ defmodule Pento.Survey.Rating do
   alias Pento.Accounts.User
   alias Pento.Catalog.Product
 
+  @max_rating 5
+
   schema "ratings" do
     field :stars, :integer
     belongs_to :user, User
@@ -18,8 +20,10 @@ defmodule Pento.Survey.Rating do
     rating
     |> cast(attrs, [:stars, :product_id])
     |> validate_required([:stars, :product_id])
-    |> validate_inclusion(:stars, 1..5)
+    |> validate_inclusion(:stars, 1..max_rating())
     |> put_change(:user_id, user_scope.user.id)
     |> unique_constraint([:user_id, :product_id])
   end
+
+  def max_rating, do: @max_rating
 end

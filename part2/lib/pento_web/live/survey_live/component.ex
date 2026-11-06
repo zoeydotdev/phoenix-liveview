@@ -1,5 +1,5 @@
 defmodule PentoWeb.SurveyLive.Component do
-  use Phoenix.Component
+  use PentoWeb, :html
 
   attr :content, :string, required: true
   slot :inner_block, required: true

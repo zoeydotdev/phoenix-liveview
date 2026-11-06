@@ -4,10 +4,16 @@
 </Component.hero>
 <div class="container mx-auto px-4 py-8 max-w-4xl">
   <%= if @demographic do %>
-    <Show.details demographic={@demographic} />
+    <DemographicLive.Show.details demographic={@demographic} />
+    <br />
+    <br />
+    <RatingLive.Index.product_list
+      products={@products}
+      current_scope={@current_scope}
+    />
   <% else %>
     <.live_component
-      module={Form}
+      module={DemographicLive.Form}
       id="demographic-form"
       current_scope={@current_scope}
     />
