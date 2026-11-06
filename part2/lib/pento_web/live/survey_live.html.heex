@@ -1,3 +1,4 @@
+<Layouts.flash_group flash={@flash} />
 <Component.hero content="Survey">
   Please fill out our survey
 </Component.hero>
@@ -5,6 +6,10 @@
   <%= if @demographic do %>
     <Show.details demographic={@demographic} />
   <% else %>
-    <h3>Demographic details coming soon...</h3>
+    <.live_component
+      module={Form}
+      id="demographic-form"
+      current_scope={@current_scope}
+    />
   <% end %>
 </div>

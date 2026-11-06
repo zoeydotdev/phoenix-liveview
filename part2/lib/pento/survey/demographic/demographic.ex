@@ -5,6 +5,7 @@ defmodule Pento.Survey.Demographic do
   alias Pento.Accounts.User
 
   @genders ["male", "female", "other", "prefer not to say"]
+  @years_of_birth 1900..2010
 
   schema "demographics" do
     field :gender, :string
@@ -19,9 +20,12 @@ defmodule Pento.Survey.Demographic do
     demographic
     |> cast(attrs, [:gender, :year_of_birth])
     |> validate_required([:gender, :year_of_birth])
-    |> validate_inclusion(:gender, @genders)
-    |> validate_inclusion(:year_of_birth, 1900..2010)
+    |> validate_inclusion(:gender, genders())
+    |> validate_inclusion(:year_of_birth, years_of_birth())
     |> put_change(:user_id, user_scope.user.id)
     |> unique_constraint(:user_id)
   end
+
+  def genders, do: @genders
+  def years_of_birth, do: @years_of_birth
 end
